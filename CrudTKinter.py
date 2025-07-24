@@ -1,27 +1,9 @@
-from tkinter import*
-from tkinter import ttk
-from tkinter import messagebox  
-from tkcalendar import Calendar, DateEntry
-import sqlite3
+from Modulos import *
+from ValidEntry import *
+from Funcao_BD import *
+from Relatorio import *
 
-#Bibliotecas para gerar relatórios em PDF
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter, A4  #saída do PDF
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Image
-import webbrowser
-
-root = Tk()     #criação da janela principal usando as bibliotecas gráficas
-
-class Validadores:      #validador de caracteres
-    def validate_entry2(self, text):
-        if text == "": return True
-        try:
-            value = int(text)
-        except ValueError:
-            return False
-        return 0 <= value <= 100    #100 é referente a 2 digitos  
+root = Tk()     #criação da janela principal usando as bibliotecas gráficas 
 
 class GradientFrame(Canvas):         
 #efeito gradiente no frame que herda do widget canvas
@@ -52,153 +34,32 @@ class GradientFrame(Canvas):
             color = "#%4.4x%4.4x%4.4x" % (nr, ng, nb)   #Formata os valores de cor em hexadecimal no padrão esperado por tkinter
     #Desenha uma linha vertical (do topo até a base do canvas) na posição i, com a cor calculada. A tag "gradient" permite identificá-la depois        
             self.create_line(i, 0, i, height, tags=("gradient",), fill=color)
-        self.lower("gradient")    
+        self.lower("gradient")   
 
-class Relatorios():
-    def printClient(self):      #função que chama o navegador para abrir o pdf
-        webbrowser.open("cliente.pdf")      #cria um arquivo PDF
+class EntPlaceHold(Entry):  #classe para manipular frases de auxílio para o usuário
+    def __init__(self, master=None, placeholder='PLACEHOLDER', color='gray'):
+        super().__init__(master)
 
-    def gerarRelatorioCliente(self):    #função que gera o relatório de acordo com a digitação do usuário. 
-        self.c = canvas.Canvas("cliente.pdf")   
-        self.codigoRel   = self.codigoEntry.get()
-        self.nomeRel     = self.nomeEntry.get()
-        self.telefoneRel = self.telefoneEntry.get()
-        self.cidadeRel   = self.cidadeEntry.get()
-    #desenhando string na tela largura de espaçamento da esquerda para a direita, cima para baixo
-        self.c.setFont("Helvetica-Bold", 24)
-        self.c.drawString(200, 790, 'Ficha de cliente')
-    #corpo do relatório
-        self.c.setFont("Helvetica-Bold", 16)
-        #self.c.drawString(50, 700, 'Código: '   + self.codigoRel)    Essa forma concatena a informação do cliente mas é puxado em negrito
-        self.c.drawString(50, 700, 'Código: ')    
-        self.c.drawString(50, 670, 'Nome: '  )    
-        self.c.drawString(50, 640, 'Telefone: ')    
-        self.c.drawString(50, 610, 'Cidade: ' )
-        self.c.setFont("Helvetica", 16)     #Trazendo as informações do cliente sem o negrito        
-        self.c.drawString(150, 700, self.codigoRel)    
-        self.c.drawString(150, 670, self.nomeRel)    
-        self.c.drawString(150, 640, self.telefoneRel)    
-        self.c.drawString(150, 610, self.cidadeRel)
-    #rect cria linhas, espaços, molduras
-    #Largura esquerda para direita, abaixo da informação de cidade, comprimento, espeçura da linha, fill é o preenchimento, strock é para aparecer
-        self.c.rect(20, 550, 550, 200, fill=False, stroke=True)  
-        self.c.showPage()
-        self.c.save()
-        self.printClient()
+        self.placeholder = placeholder       #instanciamento do placeholder
+        self.placeholder_color = color
+        self.default_fg_color = self['fg']
 
-class Funcao():
-    def variaveis(self):
-        self.codigo   = self.codigoEntry.get()
-        self.nome     = self.nomeEntry.get()
-        self.telefone = self.telefoneEntry.get()
-        self.cidade   = self.cidadeEntry.get()
+        self.bind('<FocusIn>' , self.foc_in)   #quando o mouse passar por cima da entry, irá realizar uma função usando o bind
+        self.bind('<FocusOut>', self.foc_out)
+        self.put_placeholder()               #função para inserir um texto como padrão
 
-    def limpa_tela(self):       #irá limpar as informações de entrada do usuário
-        self.codigoEntry.delete(0, END)
-        self.nomeEntry.delete(0, END)
-        self.telefoneEntry.delete(0, END)
-        self.cidadeEntry.delete(0, END)
+    def put_placeholder(self):              
+        self.insert(0, self.placeholder)
+        self['fg'] = self.placeholder_color
 
-    def conecta_bd(self):
-        self.conn = sqlite3.connect("clientes.db")  #criando e conectando ao banco clientes.bd
-        self.cursor = self.conn.cursor()            #cursor faz a execução da query e os parametros
+    def foc_in(self, *args):       #função do bind quando o mouse passar dentro do entry
+        if self['fg']==self.placeholder_color:
+            self.delete('0', 'end')       #apaga a informação
+            self['fg']=self.default_fg_color
 
-    def desconecta_bd(self):
-        self.conn.close()    
-
-    def tabelas(self):
-        self.conecta_bd()        #funçao que conecta ao BD e cria a tabela clientes   
-        print("Conectando ao Banco de Dados")
-    #função para executar o SQL  
-    # para funcionar o autoincrement INTEGER e AUTOINCREMENT deve ser exatamente descrito dessa forma      
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS clientes
-                             (cod INTEGER PRIMARY KEY AUTOINCREMENT, nome_cliente varchar(40) not null, telefone int(12), cidade varchar(40));""")
-        self.conn.commit()   #salvando e validando a criação da tabela
-        print("Banco de dados criado com sucesso")    
-
-    def insert(self):
-        self.variaveis()     #chamando a função de variáveis  
-    #tratando condição se caso o usuário não digitar
-        if self.nomeEntry.get()  == "": #caso o campo esteja vazio
-            messagebox.showinfo("Aviso", "Para cadastrar um novo cliente é preciso digitar o nome!" )
-        elif self.telefoneEntry.get() == "":
-            messagebox.showinfo("Aviso", "Para cadastrar um novo cliente é preciso digitar o telefone!" )
-        elif self.cidadeEntry.get() == "":  
-            messagebox.showinfo("Aviso", "Para cadastrar um novo cliente é preciso digitar a cidade!" )
-        else:              
-            self.conecta_bd()    #chamando a função conecta_db para conectar ao BD
-            self.cursor.execute("""INSERT INTO clientes (nome_cliente, telefone, cidade)
-                                VALUES(?, ?, ?)""", (self.nome, self.telefone, self.cidade))
-            self.conn.commit()
-            self.desconecta_bd()           
-            self.select_lista()  #depois de inserir um novo registro irá realizar o select da lista
-            self.limpa_tela()    #limpa os dados digitados
-
-    def select_lista(self): 
-    #Caso tenha algo na lista vai deletar, depois *self get irá exibir novamente
-        self.listaCli.delete(*self.listaCli.get_children())
-        self.conecta_bd()          
-        lista = self.cursor.execute("SELECT * FROM clientes ORDER BY cod;")    
-        for i in lista:
-            self.listaCli.insert("", END, values=i)
-            
-        self.desconecta_bd()    #A conexão é fechada depois de realizar o for loop
-
-    def OnDoubleClick(self, event):  #função para coletar as informações do Treeview usando o duplo clique. Realiza o evento de doubleclick
-        self.limpa_tela()
-        self.listaCli.selection()   #selecionando as informações da lista
-        for n in self.listaCli.selection():
-            col1, col2, col3, col4 = self.listaCli.item(n, 'values')    #seleciona os itens que receberem o dublo clique
-            self.codigoEntry.insert(END, col1)                          #pega as informações que o Entry receberá
-            self.nomeEntry.insert(END, col2)
-            self.telefoneEntry.insert(END, col3)
-            self.cidadeEntry.insert(END, col4)
-
-    def deleta_cliente(self):
-        self.variaveis()     #chamando a função de variáveis   
-        self.conecta_bd()
-        self.cursor.execute("DELETE FROM clientes WHERE cod = ?", (self.codigo))
-        self.conn.commit()
-        self.desconecta_bd()
-        self.limpa_tela()
-        self.select_lista() 
-
-    def altera_cliente(self):
-        self.variaveis()    #chamando função de variáveis
-        self.conecta_bd()
-        self.cursor.execute("""UPDATE clientes SET nome_cliente = ?, telefone = ?, cidade =? 
-                            WHERE cod = ? """, (self.nome, self.telefone, self.cidade, self.codigo,))   #codigo deve ficar por último
-        self.conn.commit()
-        self.desconecta_bd()
-        self.select_lista()
-        self.limpa_tela()
-
-    def busca_cliente(self):
-        self.conecta_bd()
-        self.listaCli.delete(*self.listaCli.get_children())      #limpando a lista    
-        self.nomeEntry.insert(END, '%')  #porcentagem busca tudo que estiver digitado, como se fosse um complemento
-        nome = self.nomeEntry.get()
-    #Like faz a pesquisa onde tem a informação no cliente ordenado ascedente por nome
-    #porcentagem é o código usado para não precisar digitar toda informação a ser buscada
-        self.cursor.execute("SELECT * FROM clientes WHERE nome_cliente LIKE '%s' ORDER BY  nome_cliente ASC" % nome)
-        buscanomeCli = self.cursor.fetchall()
-        for i in buscanomeCli:  #insere a busca dentro da lista
-            self.listaCli.insert("", END, values=i)
-        self.limpa_tela()    
-        self.desconecta_bd()
-
-    def calendario(self):
-        self.calendario1 = Calendar(self.aba2, fg="gray75", bg="blue", font=("Times", '9', 'bold'), locale='pt_br') #locale configura a data pela regiao
-        self.calendario1.place(relx=0.5, rely=0.15)
-        self.calData = Button(self.aba2, text="Inserir Data", command=self.print_cal)
-        self.calData.place(relx=0.56, rely=0.02, height=25, width=100) 
-
-    def print_cal(self): #inserindo a data na entry
-        dataIni = self.calendario1.get_date()
-        self.calendario1.destroy()              #fecha a janela
-        self.dataEntry.delete(0, END)           #deleta o que tiver escrito para não sobrescrever
-        self.dataEntry.insert(END, dataIni)     #insert, joga a informação do calendario1 para o dataIni
-        self.calData.destroy()                  #destroi o botão que insere a data
+    def foc_out(self, *args):      #função do bind quando o mouse passar fora do entry
+        if not self.get():   #se caso não tiver a informação chamará a função put_placeholder       
+            self.put_placeholder()    
 
 class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe aplication pode usar a classe Funcao
     def __init__(self):
@@ -269,12 +130,12 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
     #label e entrada do nome
         self.lblNome = Label(self.aba1, text='Nome', bg='#a4a8aa', font=('verdana', 8, 'bold'))
         self.lblNome.place(relx=0.05, rely=0.30)
-        self.nomeEntry = Entry(self.aba1, font=('verdana', 8, 'bold'))
+        self.nomeEntry = EntPlaceHold(self.aba1, 'Digite o nome do cliente')
         self.nomeEntry.place(relx=0.05, rely=0.38, relheight=0.1, relwidth=0.89)
     #label e entrada do telefone
         self.lblTelefone = Label(self.aba1, text='Telefone', bg='#a4a8aa', font=('verdana', 8, 'bold'))
         self.lblTelefone.place(relx=0.05, rely=0.60)
-        self.telefoneEntry = Entry(self.aba1, font=('verdana', 8, 'bold'))
+        self.telefoneEntry = EntPlaceHold(self.aba1, 'Digite um telefone')
         self.telefoneEntry.place(relx=0.05, rely=0.68, relheight=0.1, relwidth=0.30)    
     #label e entrada do nome de cidade
         self.lblCidade = Label(self.aba1, text='Cidade', bg='#a4a8aa', font=('verdana', 8, 'bold'))

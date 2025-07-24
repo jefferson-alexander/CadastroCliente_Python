@@ -1,6 +1,7 @@
 from tkinter import*
 from tkinter import ttk
 from tkinter import messagebox  
+from tkcalendar import Calendar, DateEntry
 import sqlite3
 
 #Bibliotecas para gerar relatórios em PDF
@@ -12,6 +13,15 @@ from reportlab.platypus import SimpleDocTemplate, Image
 import webbrowser
 
 root = Tk()     #criação da janela principal usando as bibliotecas gráficas
+
+class Validadores:      #validador de caracteres
+    def validate_entry2(self, text):
+        if text == "": return True
+        try:
+            value = int(text)
+        except ValueError:
+            return False
+        return 0 <= value <= 100    #100 é referente a 2 digitos  
 
 class GradientFrame(Canvas):         
 #efeito gradiente no frame que herda do widget canvas
@@ -177,17 +187,31 @@ class Funcao():
         self.limpa_tela()    
         self.desconecta_bd()
 
-class Aplication(Funcao, Relatorios):   #informar que a classe aplication pode usar a classe Funcao
+    def calendario(self):
+        self.calendario1 = Calendar(self.aba2, fg="gray75", bg="blue", font=("Times", '9', 'bold'), locale='pt_br') #locale configura a data pela regiao
+        self.calendario1.place(relx=0.5, rely=0.15)
+        self.calData = Button(self.aba2, text="Inserir Data", command=self.print_cal)
+        self.calData.place(relx=0.56, rely=0.02, height=25, width=100) 
+
+    def print_cal(self): #inserindo a data na entry
+        dataIni = self.calendario1.get_date()
+        self.calendario1.destroy()              #fecha a janela
+        self.dataEntry.delete(0, END)           #deleta o que tiver escrito para não sobrescrever
+        self.dataEntry.insert(END, dataIni)     #insert, joga a informação do calendario1 para o dataIni
+        self.calData.destroy()                  #destroi o botão que insere a data
+
+class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe aplication pode usar a classe Funcao
     def __init__(self):
-        self.root = root    #equivalência para a classe root, é preciso nomeá-la
-        self.tela()         #chamando a função tela
-        self.frameTela()    #chamando a função frame
-        self.janelaFrame1() #chamando as funções do frame1
-        self.janelaFrame2() #chamando as funções do frame2
-        self.tabelas()      #irá criar a tabela caso não exista
-        self.select_lista() #exibe a lista atualizada ao abrir o sistema        
-        self.Menus()        
-        root.mainloop()     #responsável por abrir a janela             
+        self.root = root        #equivalência para a classe root, é preciso nomeá-la
+        self.tela()             #chamando a função tela
+        self.validaEntradas()   #chamando função de validar entradas do código digitado pelo usuário
+        self.frameTela()        #chamando a função frame
+        self.janelaFrame1()     #chamando as funções do frame1
+        self.janelaFrame2()     #chamando as funções do frame2
+        self.tabelas()          #irá criar a tabela caso não exista
+        self.select_lista()     #exibe a lista atualizada ao abrir o sistema        
+        self.Menus()            #tela de menu
+        root.mainloop()         #responsável por abrir a janela             
 
     def tela(self):         #configuração de tela    
         self.root.title("Cadastro de Clientes")
@@ -196,6 +220,10 @@ class Aplication(Funcao, Relatorios):   #informar que a classe aplication pode u
         self.root.resizable(True, False)              #aumenta ou diminua, horizontal x vertical
         self.root.maxsize(width=900, height=700)      #tamanho máximo da tela
         self.root.minsize(width=500, height=300)      #tamanho mínimo da tela
+
+    def validaEntradas(self):
+        self.vcmd2 = (self.root.register(self.validate_entry2), "%P")   #abstração para usar a função dentro da entry 
+    #validate="key", validatecommand="self.vcmd2" são introduzidos no Entry.       
 
 #posicionamento do frame dentro da tela horizontal x vertical. Valor entre 0 a 1. 
 #relx é o valor da esquerda para a direita e rely é valor de cima para baixo       
@@ -235,7 +263,7 @@ class Aplication(Funcao, Relatorios):   #informar que a classe aplication pode u
     #label e entrada do código
         self.lblCodigo = Label(self.aba1, text='Código', bg='#a4a8aa', font=('verdana', 8, 'bold'))
         self.lblCodigo.place(relx=0.05, rely=0.02)
-        self.codigoEntry = Entry(self.aba1, bg="#84878b", font=('verdana', 8, 'bold'))      #Chamando o txt para o usuário digitar
+        self.codigoEntry = Entry(self.aba1, validate="key", validatecommand=self.vcmd2, bg="#84878b", font=('verdana', 8, 'bold'))      #Chamando o txt para o usuário digitar
         self.codigoEntry.place(relx=0.05, rely=0.1, relheight=0.1, relwidth=0.08)                #relwidth determina o tamanho do label
         #self.codigoEntry.config(state="disabled")                                                # Desabilita o campo (o usuário não pode digitar)
     #label e entrada do nome
@@ -264,9 +292,14 @@ class Aplication(Funcao, Relatorios):   #informar que a classe aplication pode u
         self.btnJanela2 = Button(self.aba2,text="Janela 2", bd=3, bg="#6d6e9c", activebackground='#108ecb', activeforeground="white", fg='white', font=('verdana', 8, 'bold'), command=self.janela2)        
         self.btnJanela2.place(relx=0.1 ,rely=0.5)
 
+    #calendário
+        self.bt_calendario = Button(self.aba2, text="Data", command=self.calendario)    
+        self.bt_calendario.place(relx=0.5, rely=0.02)
+        self.dataEntry = Entry(self.aba2, width=10)
+        self.dataEntry.place(relx=0.5,rely=0.17)
+
     def janelaFrame2(self): 
-    #criando tabela. Height configura a posição verticalmente e columns especifica as colunas
-        #self.listaCli = ttk.Treeview(self.frame_2, height=3, columns=("col1", "col2", "col3","col4"))
+    #criando tabela. Height configura a posição verticalmente e columns especifica as colunas        
         self.listaCli = ttk.Treeview(self.frame_2, columns=("col1", "col2", "col3","col4"), show='headings')
     #especificando o cabeçalho de cada coluna criada. É iniciada com valor Zero    
         self.listaCli.heading("#0", text="")

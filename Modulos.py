@@ -4,6 +4,9 @@ from tkinter import messagebox
 from tkcalendar import Calendar, DateEntry
 import sqlite3
 
+#pip install pycep_correiros
+#import pycep_correios
+
 #Bibliotecas para gerar relatórios em PDF
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4  #saída do PDF

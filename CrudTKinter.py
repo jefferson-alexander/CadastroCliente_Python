@@ -101,8 +101,8 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
     #Adicionando abas no frame1
         self.abas = ttk.Notebook(self.frame_1)        
         self.aba1 = Frame(self.abas)
-        self.aba2 = GradientFrame(self.abas)
         self.aba1.configure(background='#a4a8aa')
+        self.aba2 = GradientFrame(self.abas)        
         self.aba2.configure(background="lightgray")
         self.abas.add(self.aba1, text="Aba 1")
         self.abas.add(self.aba2, text="Aba 2")
@@ -113,12 +113,16 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
     #efeito do botão é activeforeground e activeforeground        
         self.btnLimpar = Button(self.aba1, text='Limpar', bd=3, bg="#6d6e9c", activebackground='#108ecb', activeforeground="white", fg='white', font=('verdana', 8, 'bold'), command=self.limpa_tela )
         self.btnLimpar.place(relx=0.2 ,rely=0.1, relheight=0.1, relwidth=0.1) 
+        #        
         self.btnBuscar = Button(self.aba1, text='Buscar', bd=3, bg="#6d6e9c", activebackground='#108ecb', activeforeground="white", fg='white', font=('verdana', 8, 'bold'), command=self.busca_cliente)
         self.btnBuscar.place(relx=0.31 ,rely=0.1, relheight=0.1, relwidth=0.1)   
+        #
         self.btnNovo = Button(self.aba1, text='Cadastrar', bd=3, bg="#6d6e9c",fg='white', font=('verdana', 8, 'bold'), command=self.insert)
         self.btnNovo.place(relx=0.62 ,rely=0.1, relheight=0.1, relwidth=0.1) 
+        #
         self.btnAlterar = Button(self.aba1, text='Alterar', bd=3, bg="#6d6e9c",fg='white', font=('verdana', 8, 'bold'), command=self.altera_cliente)
         self.btnAlterar.place(relx=0.73 ,rely=0.1, relheight=0.1, relwidth=0.1) 
+        #
         self.btnApagar = Button(self.aba1, text='Apagar', bd=3, bg="#6d6e9c",fg='white', font=('verdana', 8, 'bold'), command=self.deleta_cliente)
         self.btnApagar.place(relx=0.84 ,rely=0.1, relheight=0.1, relwidth=0.1) 
     #label e entrada do código
@@ -134,14 +138,29 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
         self.nomeEntry.place(relx=0.05, rely=0.38, relheight=0.1, relwidth=0.89)
     #label e entrada do telefone
         self.lblTelefone = Label(self.aba1, text='Telefone', bg='#a4a8aa', font=('verdana', 8, 'bold'))
-        self.lblTelefone.place(relx=0.05, rely=0.60)
+        self.lblTelefone.place(relx=0.05, rely=0.50)
         self.telefoneEntry = EntPlaceHold(self.aba1, 'Digite um telefone')
-        self.telefoneEntry.place(relx=0.05, rely=0.68, relheight=0.1, relwidth=0.30)    
-    #label e entrada do nome de cidade
+        self.telefoneEntry.place(relx=0.05, rely=0.58, relheight=0.1, relwidth=0.30)    
+    #label e entrada do nome de cidade e endereço        
+        self.btnCep = Button(self.aba1, text='CEP', bg='#a4a8aa', font=('verdana', 8, 'bold'))
+        self.btnCep.place(relx=0.36, rely=0.54, relheight=0.13) #relheigth é a altura
+        self.cepEntry = EntPlaceHold(self.aba1, 'teste do cep')
+        self.cepEntry.place(relx=0.42, rely=0.58, relheight=0.1, relwidth=0.26)
+        #
         self.lblCidade = Label(self.aba1, text='Cidade', bg='#a4a8aa', font=('verdana', 8, 'bold'))
-        self.lblCidade.place(relx=0.36, rely=0.60)
+        self.lblCidade.place(relx=0.69, rely=0.50)        
         self.cidadeEntry = Entry(self.aba1, font=('verdana', 8, 'bold'))
-        self.cidadeEntry.place(relx=0.36, rely=0.68, relheight=0.1, relwidth=0.58)
+        self.cidadeEntry.place(relx=0.69, rely=0.58, relheight=0.1, relwidth=0.25)        
+        #
+        self.lblBairro = Label(self.aba1, text='Bairro', bg='#a4a8aa', font=('verdana', 8, 'bold'))
+        self.lblBairro.place(relx=0.05, rely=0.69)
+        self.bairroEntry = Entry(self.aba1, font=('verdana', 8, 'bold'))
+        self.bairroEntry.place(relx=0.05, rely=0.78, relheight=0.1, relwidth=0.30)
+        #
+        self.lblEndereco = Label(self.aba1, text='Endereço', bg='#a4a8aa', font=('verdana', 8, 'bold'))
+        self.lblEndereco.place(relx=0.36, rely=0.69)
+        self.enderecoEntry = Entry(self.aba1, font=('verdana', 8, 'bold'))
+        self.enderecoEntry.place(relx=0.36, rely=0.78, relheight=0.1, relwidth=0.58)
      #dropdown
         self.Tipvar = StringVar(self.aba2)
         self.TipV = ("Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)")
@@ -158,6 +177,15 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
         self.bt_calendario.place(relx=0.5, rely=0.02)
         self.dataEntry = Entry(self.aba2, width=10)
         self.dataEntry.place(relx=0.5,rely=0.17)
+
+    #def cepCorreiros(self): #digitar o cep e clicar no botão, irá preencher os outros campos
+    #primeiro deleta os campos caso haja algo preenchido
+        #self.cidadeEntry.delete(0, END)
+        #self.enderecoEntryEntry.delete(0, END)
+        #self.bairroEntryEntry.delete(0, END)
+        #zipcode = self.cepEntry.get()           #definir variável para coletar os dados no cep
+        #dadosCep = pycep_correios.get_address_from_cep(zipcode)        #variável para a função
+        #self.cidadeEntry.insert(END, dadosCep['cidade'])
 
     def janelaFrame2(self): 
     #criando tabela. Height configura a posição verticalmente e columns especifica as colunas        
@@ -206,6 +234,6 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
         self.root2.resizable(False, False)   #janela estática, tamanho fixo
         self.root2.transient(self.root)      #janela 2 está dentro da janela principal
         self.root2.focus_force               #forçando o foco para que a janela 2 fique a frente
-        self.root2.grab_set()                #impede que seja digitando algo na primeira janela
+        self.root2.grab_set()                #impede que seja digitando algo na primeira janela                   
                        
 Aplication()    #chamando a classe para exibir a janela

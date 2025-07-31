@@ -142,7 +142,7 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
         self.telefoneEntry = EntPlaceHold(self.aba1, 'Digite um telefone')
         self.telefoneEntry.place(relx=0.05, rely=0.58, relheight=0.1, relwidth=0.30)    
     #label e entrada do nome de cidade e endereço        
-        self.btnCep = Button(self.aba1, text='CEP', bg='#a4a8aa', font=('verdana', 8, 'bold'))
+        self.btnCep = Button(self.aba1, text='CEP', bg='#a4a8aa', font=('verdana', 8, 'bold'), command=self.cepCorreiros)
         self.btnCep.place(relx=0.36, rely=0.54, relheight=0.13) #relheigth é a altura
         self.cepEntry = EntPlaceHold(self.aba1, 'teste do cep')
         self.cepEntry.place(relx=0.42, rely=0.58, relheight=0.1, relwidth=0.26)
@@ -178,14 +178,21 @@ class Aplication(Funcao, Relatorios, Validadores):   #informar que a classe apli
         self.dataEntry = Entry(self.aba2, width=10)
         self.dataEntry.place(relx=0.5,rely=0.17)
 
-    #def cepCorreiros(self): #digitar o cep e clicar no botão, irá preencher os outros campos
+    def cepCorreiros(self): #digitar o cep e clicar no botão, irá preencher os outros campos
     #primeiro deleta os campos caso haja algo preenchido
-        #self.cidadeEntry.delete(0, END)
-        #self.enderecoEntryEntry.delete(0, END)
-        #self.bairroEntryEntry.delete(0, END)
-        #zipcode = self.cepEntry.get()           #definir variável para coletar os dados no cep
-        #dadosCep = pycep_correios.get_address_from_cep(zipcode)        #variável para a função
-        #self.cidadeEntry.insert(END, dadosCep['cidade'])
+        try:
+            self.cidadeEntry.delete(0, END)
+            self.enderecoEntry.delete(0, END)
+            self.bairroEntry.delete(0, END)
+        #get para definir variável que vai coletar os dados no cep    
+            zipcode = self.cepEntry.get()                   
+            dadosCep = brazilcep.get_address_from_cep(zipcode)        #variável para a função
+            print(dadosCep)                                           #traz as informações do cep
+            self.cidadeEntry.insert(END, dadosCep['city'])            #coletando a informação 'city' da lista exibida no dadoscep  
+            self.enderecoEntry.insert(END, dadosCep['street'])
+            self.bairroEntry.insert(END, dadosCep['district'])
+        except:
+            messagebox.showinfo("Corrigir", "Cep não encontrado!")    
 
     def janelaFrame2(self): 
     #criando tabela. Height configura a posição verticalmente e columns especifica as colunas        

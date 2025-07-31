@@ -4,8 +4,9 @@ from tkinter import messagebox
 from tkcalendar import Calendar, DateEntry
 import sqlite3
 
-#pip install pycep_correiros
+#pycep_correiros não existe mais e assim foi usado o brazilcep
 #import pycep_correios
+import brazilcep
 
 #Bibliotecas para gerar relatórios em PDF
 from reportlab.pdfgen import canvas
